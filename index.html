@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+	<meta property="og:image" content="https://elightrake.github.io/input_ranker/hike.png">
     <title>Item Ranker</title>
     <style>
         body {
@@ -21,7 +23,7 @@
             font-size: 3em;
             margin-bottom: 0.5em;
         }
-        #csvUpload {
+        #csvUpload, #manualEntry {
             margin-bottom: 20px;
         }
         button {
@@ -54,17 +56,30 @@
             background-color: #2ecc71;
             color: white;
         }
+        textarea {
+            width: 300px;
+            height: 150px;
+            padding: 10px;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
     <h1>Item Ranker</h1>
 
-    <!-- Page 1: CSV Upload -->
+    <!-- Page 1: CSV Upload or Manual Entry -->
     <div id="csvUpload">
         <h2>Upload CSV with Items</h2>
         <input type="file" id="fileInput" accept=".csv">
-        <button id="startRankingBtn" style="display:none;">Start Ranking</button>
     </div>
+
+    <div id="manualEntry">
+        <h2>Or Enter Items Manually</h2>
+        <textarea id="manualItems" placeholder="Enter one item per line"></textarea>
+        <button id="useManualList">Use Manual List</button>
+    </div>
+
+    <button id="startRankingBtn" style="display:none;">Start Ranking</button>
 
     <!-- Page 2: Ranking and Comparison -->
     <div id="rankingPage" style="display:none;">
@@ -83,10 +98,10 @@
     </div>
 
     <script>
-        let items = [];  // Array to hold items from CSV
+        let items = [];  // Array to hold items from CSV or manual input
         let rankings = [];  // Array to store items with Elo scores
 
-        // Function to read CSV and initialize items
+        // Function to handle CSV upload
         document.getElementById('fileInput').addEventListener('change', function(event) {
             const file = event.target.files[0];
             const reader = new FileReader();
@@ -100,9 +115,23 @@
             reader.readAsText(file);
         });
 
+        // Function to handle manual input
+        document.getElementById('useManualList').addEventListener('click', function() {
+            const manualText = document.getElementById('manualItems').value;
+            const lines = manualText.split('\n').map(line => line.trim()).filter(line => line);
+            if (lines.length > 0) {
+                items = lines.map(item => ({ name: item, score: 1400 }));
+                rankings = [...items];  // Initialize rankings with default Elo scores
+                document.getElementById('startRankingBtn').style.display = 'block';
+            } else {
+                alert('Please enter at least one item.');
+            }
+        });
+
         // Start ranking process when button is clicked
         document.getElementById('startRankingBtn').addEventListener('click', function() {
             document.getElementById('csvUpload').style.display = 'none';
+            document.getElementById('manualEntry').style.display = 'none';
             document.getElementById('rankingPage').style.display = 'block';
             updateComparison();
             updateRankings();
